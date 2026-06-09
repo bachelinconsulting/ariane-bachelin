@@ -1,0 +1,5 @@
+/*
+  Cloudflare Pages — SPA redirect rule
+  Toutes les routes renvoient vers index.html pour le routing client-side
+*/
+/* /index.html 200
