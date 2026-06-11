@@ -614,6 +614,12 @@ const Views = {
       </div>`;
     }).join('');
 
+    // Init exercise engines BEFORE generating content so match.render() can
+    // set matchTotal/matchCorrect AFTER init (not before, which was wiping them)
+    if (phase === 'exercises' || phase === 'quiz') {
+      ExerciseEngines.init(app, ls, phase);
+    }
+
     let phaseContent = '';
     if (phase === 'theory') {
       phaseContent = this.renderTheory(dayData);
@@ -648,10 +654,6 @@ const Views = {
 
     // Re-attach lesson state since innerHTML replaced the DOM
     document.getElementById('app')._lessonState = ls;
-    // Re-init exercises that need JS state
-    if (phase === 'exercises' || phase === 'quiz') {
-      ExerciseEngines.init(app, ls, phase);
-    }
   },
 
   renderTheory(dayData) {
@@ -1248,9 +1250,11 @@ const ExerciseEngines = {
         if (!ExerciseEngines._state.matchMatched) ExerciseEngines._state.matchMatched = {};
         ExerciseEngines._state.matchMatched[leftIdx] = true;
         ExerciseEngines._state.matchCorrect = (ExerciseEngines._state.matchCorrect || 0) + 1;
+        // Fallback: infer total from matchPairs array if matchTotal was lost
+        const total = ExerciseEngines._state.matchTotal || (ExerciseEngines._state.matchPairs && ExerciseEngines._state.matchPairs.length) || 4;
 
         // Check if all matched
-        if (ExerciseEngines._state.matchCorrect === ExerciseEngines._state.matchTotal) {
+        if (ExerciseEngines._state.matchCorrect === total) {
           ExerciseEngines._state.lastCorrect = true;
           ExerciseEngines._showResult(true, null);
           ExerciseEngines._showNextButton();
